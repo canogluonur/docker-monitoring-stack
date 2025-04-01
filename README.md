@@ -45,17 +45,6 @@ docker-compose up -d
 
 ## Troubleshooting
 
-- Check container status: `docker-compose ps -a `
+- Check container status: `docker compose ps -a `
 - View logs: `docker logs prometheus`
 - Verify targets in Prometheus UI: http://localhost:9090/targets
-
-## Project Structure
-
-```
-├── docker-compose.yml        # Container definitions
-├── prometheus.yml            # Prometheus configuration
-├── node-exporter-alerts.yml  # Alert rules
-├── alertmanager.yml          # Alertmanager configuration
-└── grafana/                  # Grafana data and config
-    └── datasources.yml       # Grafana datasource configuration
-```
