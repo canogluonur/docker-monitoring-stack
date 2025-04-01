@@ -1,0 +1,108 @@
+groups:
+- name: node_exporter_alerts
+  rules:
+  # CPU Usage Alerts
+  - alert: NodeHighCpuUsage
+    expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 75
+    for: 3m
+    labels:
+      severity: warning
+      project: monitoring
+    annotations:
+      summary: "High CPU usage ({{ $labels.instance }})"
+      description: "CPU usage has been above 75% for the last 3 minutes.\n  Value: {{ $value | printf \"%.2f\" }}%"
+
+  - alert: NodeCriticalCpuUsage
+    expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+    for: 5m
+    labels:
+      severity: critical
+      project: monitoring
+    annotations:
+      summary: "Critical CPU usage ({{ $labels.instance }})"
+      description: "CPU usage has been above 90% for the last 5 minutes.\n  Value: {{ $value | printf \"%.2f\" }}%"
+
+  # RAM Usage Alerts
+  - alert: NodeHighMemoryUsage
+    expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 80
+    for: 3m
+    labels:
+      severity: warning
+      project: monitoring
+    annotations:
+      summary: "High memory usage ({{ $labels.instance }})"
+      description: "Memory usage has been above 80% for the last 3 minutes.\n  Value: {{ $value | printf \"%.2f\" }}%"
+
+  - alert: NodeCriticalMemoryUsage
+    expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 95
+    for: 5m
+    labels:
+      severity: critical
+      project: monitoring
+    annotations:
+      summary: "Critical memory usage ({{ $labels.instance }})"
+      description: "Memory usage has been above 95% for the last 5 minutes.\n  Value: {{ $value | printf \"%.2f\" }}%"
+
+  # Disk Usage Alerts
+  - alert: NodeHighDiskUsage
+    expr: (node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"} - node_filesystem_free_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"}) / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"} * 100 > 80
+    for: 5m
+    labels:
+      severity: warning
+      project: monitoring
+    annotations:
+      summary: "High disk usage ({{ $labels.instance }} - {{ $labels.mountpoint }})"
+      description: "Disk usage has been above 80% for the last 5 minutes.\n  Mountpoint: {{ $labels.mountpoint }}\n  Value: {{ $value | printf \"%.2f\" }}%"
+
+  - alert: NodeCriticalDiskUsage
+    expr: (node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"} - node_filesystem_free_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"}) / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"} * 100 > 95
+    for: 5m
+    labels:
+      severity: critical
+      project: monitoring
+    annotations:
+      summary: "Critical disk usage ({{ $labels.instance }} - {{ $labels.mountpoint }})"
+      description: "Disk usage has been above 95% for the last 5 minutes.\n  Mountpoint: {{ $labels.mountpoint }}\n  Value: {{ $value | printf \"%.2f\" }}%"
+
+  # High Disk I/O Alert
+  - alert: NodeHighDiskIO
+    expr: rate(node_disk_io_time_seconds_total[5m]) > 0.5
+    for: 5m
+    labels:
+      severity: warning
+      project: monitoring
+    annotations:
+      summary: "High disk I/O ({{ $labels.instance }} - {{ $labels.device }})"
+      description: "Disk I/O usage has been high for the last 5 minutes.\n  Device: {{ $labels.device }}\n  Value: {{ $value | printf \"%.2f\" }}"
+
+  # Swap Usage Alert
+  - alert: NodeHighSwapUsage
+    expr: (node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes) / node_memory_SwapTotal_bytes * 100 > 80
+    for: 5m
+    labels:
+      severity: warning
+      project: monitoring
+    annotations:
+      summary: "High swap usage ({{ $labels.instance }})"
+      description: "Swap usage has been above 80% for the last 5 minutes.\n  Value: {{ $value | printf \"%.2f\" }}%"
+
+  # Load Average Alert (1 minute)
+  - alert: NodeHighLoadAverage
+    expr: node_load1 > (count by (instance) (node_cpu_seconds_total{mode="idle"}) * 0.8)
+    for: 5m
+    labels:
+      severity: warning
+      project: monitoring
+    annotations:
+      summary: "High load average ({{ $labels.instance }})"
+      description: "1-minute load average is above 80% of CPU cores.\n  Value: {{ $value | printf \"%.2f\" }}"
+
+  # System Uptime Alert
+  - alert: NodeSystemDown
+    expr: node_time_seconds - node_boot_time_seconds < 300
+    labels:
+      severity: warning
+      project: monitoring
+    annotations:
+      summary: "System rebooted ({{ $labels.instance }})"
+      description: "Server has been rebooted within the last 5 minutes.\n  Uptime: {{ $value | printf \"%.0f\" }} seconds"
